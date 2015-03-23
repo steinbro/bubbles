@@ -62,8 +62,7 @@ def _(ctx, obj, keep=None, drop=None, rename=None):
 
 @filter_by_value.register("sql")
 def _(ctx, src, key, value, discard=False):
-    """Returns difference between left and right statements"""
-
+    """Filter by value: field should equal specified value."""
     if isinstance(key, (list, tuple)) and \
                     not isinstance(value, (list, tuple)):
         raise ArgumentError("If key is compound then value should be as well")
@@ -82,7 +81,7 @@ def _(ctx, src, key, value, discard=False):
 
 
 @filter_by_range.register("sql")
-def _(ctx, src, field, low, high, discard=False):
+def _(ctx, src, key, low, high, discard=False):
     """Filter by range: field should be between low and high."""
 
     statement = src.sql_statement()
@@ -153,7 +152,7 @@ def _(ctx, statement, keys=None):
     """Returns a statement that selects whole rows with distinct values
     for `keys`"""
     # TODO: use prepare_key
-    raise NotImplementedError
+    raise RetryOperation(["rows"], reason="Not implemented")
 
 @sample.register("sql")
 @_unary
@@ -228,7 +227,13 @@ def _(ctx, obj, key, measures=None, include_count=True,
     selection = [statement.c[str(key)] for key in keys]
 
     for measure, agg_name in measures:
-        func = aggregation_functions[agg_name]
+        try:
+            func = aggregation_functions[agg_name]
+        except KeyError:
+            raise ArgumentError(
+                'Unknown aggregation function %r on measure %r' % (
+                    agg_name, measure))
+
         label = "%s_%s" % (str(measure), agg_name)
         aggregation = func(obj.column(measure)).label(label)
         selection.append(aggregation)
