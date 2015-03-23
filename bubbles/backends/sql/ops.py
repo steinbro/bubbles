@@ -30,7 +30,6 @@ def _unary(func):
 @field_filter.register("sql")
 def _(ctx, obj, keep=None, drop=None, rename=None):
     """Returns a statement with fields according to the field filter"""
-    # TODO: preserve order of "keep" -> see FieldFilter
 
     field_filter = FieldFilter(keep=keep, drop=drop, rename=rename)
 

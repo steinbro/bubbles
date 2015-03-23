@@ -501,7 +501,6 @@ class FieldList(object):
 
 class FieldFilter(object):
     """Filters fields in a stream"""
-    # TODO: preserve order of "keep"
     def __init__(self, keep=None, drop=None, rename=None):
         """Creates a field map. `rename` is a dictionary where keys are input
         field names and values are output field names. `drop` is list of
@@ -562,6 +561,11 @@ class FieldFilter(object):
                 (self.keep and field.name in self.keep) or \
                 not (self.keep or self.drop):
                 output_fields.append(new_field)
+
+        # preserve order of "keep"
+        if len(self.keep) > 0:
+            output_fields = FieldList(*sorted(
+                output_fields, key=lambda f: self.keep.index(f.name)))
 
         return output_fields
 

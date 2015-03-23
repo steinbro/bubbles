@@ -30,7 +30,9 @@ class SQLBackendTestCase(unittest.TestCase):
         result = self.context.op.field_filter(self.table, rename={'c': 'd'})
         self.assertListEqual(['a', 'b', 'd'], result.fields.names())
 
-        #TODO check ordering
+        # check ordering
+        result = self.context.op.field_filter(self.table, keep=['b', 'a'])
+        self.assertListEqual(['b', 'a'], result.fields.names())
 
     def test_filter_by_value(self):
         result = self.context.op.filter_by_value(self.table, 'b', 2)
