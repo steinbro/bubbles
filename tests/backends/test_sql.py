@@ -75,12 +75,36 @@ class SQLBackendTestCase(unittest.TestCase):
 
     def test_aggregate(self):
         result = self.context.op.aggregate(self.table, 'b', [('c', 'sum')])
-        b_val, c_sum, record_count =list(result.rows())[0]
+        b_val, c_sum, record_count = list(result.rows())[0]
 
         self.assertEqual(2, b_val)
-        self.assertEqual(sum(c for (_, b, c) in self.data if b == 2), c_sum)
+        self.assertEqual(sum(c for (_, b, c) in self.data if b == b_val), c_sum)
         self.assertEqual(
-            len(list(1 for _, b, _ in self.data if b == 2)), record_count)
+            sum(1 for (_, b, _) in self.data if b == b_val), record_count)
+
+    def test_count_duplicates(self):
+        # add a duplicate row
+        self.table.append_from_iterable([(1,2,3)])
+
+        result = self.context.op.count_duplicates(self.table)
+        self.assertEqual(1, len(list(result.rows())))
+
+    def test_nonempty_count(self):
+        # add empty values
+        self.table.append_from_iterable([(1,None,None)])
+
+        result = self.context.op.nonempty_count(self.table)
+        a_count, b_count, c_count = list(result.rows())[0]
+        self.assertEqual(4, a_count)
+        self.assertEqual(3, b_count)
+        self.assertEqual(3, c_count)
+
+    def test_distinct_count(self):
+        result = self.context.op.distinct_count(self.table)
+        a_count, b_count, c_count = list(result.rows())[0]
+        self.assertEqual(1, a_count)
+        self.assertEqual(2, b_count)
+        self.assertEqual(3, c_count)
 
     def test_assert_unique(self):
         self.context.op.assert_unique(self.table, 'c')
